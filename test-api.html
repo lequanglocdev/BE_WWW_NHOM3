@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test API</title>
+    <meta charset="UTF-8">
+</head>
+
+<body>
+<h1>Test API Endpoints</h1>
+
+<div>
+    <h2>1. Đăng nhập Admin</h2>
+    <button onclick="testLogin()">Test Login Admin</button>
+    <pre id="loginResult"></pre>
+</div>
+
+<div>
+    <h2>2. Tạo Category với tiếng Việt</h2>
+    <button onclick="testCreateCategory()">Test Create Category</button>
+    <pre id="categoryResult"></pre>
+</div>
+
+<div>
+    <h2>3. Tạo Admin User mới</h2>
+    <button onclick="testCreateAdmin()">Test Create Admin</button>
+    <pre id="adminResult"></pre>
+</div>
+
+<script>
+    let authToken = '';
+
+    async function testLogin() {
+        try {
+            const response = await fetch('http://localhost:8080/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: 'admin@pcstore.vn',
+                    password: 'admin123456'
+                })
+            });
+
+            const result = await response.json();
+            document.getElementById('loginResult').textContent =
+                `Status: ${response.status}\nResponse: ${JSON.stringify(result, null, 2)}`;
+
+            if (response.ok && result.token) {
+                authToken = result.token;
+                console.log('Token saved:', authToken);
+            }
+        } catch (error) {
+            document.getElementById('loginResult').textContent = 'Error: ' + error.message;
+        }
+    }
+
+    async function testCreateCategory() {
+        if (!authToken) {
+            document.getElementById('categoryResult').textContent = 'Please login first to get token!';
+            return;
+        }
+
+        try {
+            const categoryData = {
+                name: "Máy tính để bàn",
+                description: "Các loại máy tính để bàn hiệu năng cao, phù hợp cho văn phòng và gaming",
+                imageUrl: "https://example.com/desktop-computers.jpg"
+            };
+
+            const response = await fetch('http://localhost:8080/api/categories', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify(categoryData)
+            });
+
+            const result = await response.json();
+            document.getElementById('categoryResult').textContent =
+                `Status: ${response.status}\nResponse: ${JSON.stringify(result, null, 2)}`;
+        } catch (error) {
+            document.getElementById('categoryResult').textContent = 'Error: ' + error.message;
+        }
+    }
+
+    async function testCreateAdmin() {
+        try {
+            const adminData = {
+                firstName: "Quản Trị",
+                lastName: "Viên",
+                email: "admin2@pcstore.vn",
+                password: "admin789",
+                phone: "0123456789",
+                address: "123 Đường ABC, Quận 1, TP.HCM",
+                city: "TP.Hồ Chí Minh"
+            };
+
+            const response = await fetch('http://localhost:8080/api/auth/create-admin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(adminData)
+            });
+
+            const result = await response.text();
+            document.getElementById('adminResult').textContent =
+                `Status: ${response.status}\nResponse: ${result}`;
+        } catch (error) {
+            document.getElementById('adminResult').textContent = 'Error: ' + error.message;
+        }
+    }
+</script>
+</body>
+
+</html>
