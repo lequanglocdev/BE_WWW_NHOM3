@@ -32,7 +32,14 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/products/**").permitAll()
+                        .requestMatchers("/images/**").permitAll()   // ⭐ cho xem ảnh
+                        .requestMatchers("/categories/**").permitAll()
+
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/admin/products/**").hasRole("ADMIN")
+                        .requestMatchers("/admin/categories/**").hasRole("ADMIN")
+
                         .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
                         .anyRequest().authenticated()
                 )
