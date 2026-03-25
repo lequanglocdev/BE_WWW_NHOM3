@@ -27,4 +27,5 @@ public class UserController {
             @RequestBody UpdateUserDTO dto) {
         return userService.updateProfile(auth.getName(), dto);
     }
+    
 }

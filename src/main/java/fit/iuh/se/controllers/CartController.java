@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/user/cart")
 public class CartController {
@@ -41,5 +43,11 @@ public class CartController {
     public ResponseEntity<?> update(@RequestBody UpdateCartItemDTO dto,
                                     Authentication auth) {
         return service.updateQuantity(auth.getName(), dto);
+    }
+
+    @PostMapping("/apply-promo")
+    public ResponseEntity<?> applyPromo(@RequestBody Map<String,String> body,
+                                        Authentication auth){
+        return service.applyPromo(auth.getName(), body.get("code"));
     }
 }

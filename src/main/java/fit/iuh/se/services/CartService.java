@@ -2,17 +2,13 @@ package fit.iuh.se.services;
 
 import fit.iuh.se.dtos.AddToCartDTO;
 import fit.iuh.se.dtos.UpdateCartItemDTO;
-import fit.iuh.se.entities.Cart;
-import fit.iuh.se.entities.CartItem;
-import fit.iuh.se.entities.Product;
-import fit.iuh.se.entities.UserAccount;
-import fit.iuh.se.repositories.CartItemRepository;
-import fit.iuh.se.repositories.CartRepository;
-import fit.iuh.se.repositories.ProductRepository;
-import fit.iuh.se.repositories.UserAccountRepository;
+import fit.iuh.se.entities.*;
+import fit.iuh.se.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
 
 @Service
 public class CartService {
@@ -22,6 +18,8 @@ public class CartService {
     @Autowired private CartItemRepository itemRepo;
     @Autowired private ProductRepository productRepo;
     @Autowired private UserAccountRepository userRepo;
+
+    @Autowired private PromotionRepository promoRepo;
 
     private Cart getOrCreateCart(UserAccount user) {
         return cartRepo.findByUser(user).orElseGet(() -> {
@@ -89,4 +87,40 @@ public class CartService {
 
         return ResponseEntity.ok("Cập nhật số lượng thành công");
     }
+    public ResponseEntity<?> applyPromo(String email, String code){
+
+        UserAccount user = userRepo.findByEmail(email).orElseThrow();
+        Cart cart = cartRepo.findByUser(user).orElseThrow();
+        Promotion promo = promoRepo.findByCode(code).orElseThrow();
+
+        if(!promo.getIsActive())
+            throw new RuntimeException("Mã đã bị khóa");
+
+        LocalDate today = LocalDate.now();
+        if(today.isBefore(promo.getStartDate()) || today.isAfter(promo.getEndDate()))
+            throw new RuntimeException("Mã hết hạn");
+
+        double total = cart.getItems().stream()
+                .mapToDouble(i -> i.getProduct().getPrice().doubleValue() * i.getQuantity())
+                .sum();
+
+        if(total < promo.getMinOrderValue())
+            throw new RuntimeException("Đơn chưa đủ điều kiện");
+
+        double discount = 0;
+
+        if(promo.getDiscountType().equals("PERCENT"))
+            discount = total * promo.getDiscountValue() / 100;
+        else
+            discount = promo.getDiscountValue();
+
+        cart.setPromotion(promo);
+        cart.setDiscountAmount(discount);
+        cart.setFinalAmount(total - discount);
+
+        cartRepo.save(cart);
+
+        return ResponseEntity.ok("Áp mã thành công. Giảm: " + discount);
+    }
+
 }
