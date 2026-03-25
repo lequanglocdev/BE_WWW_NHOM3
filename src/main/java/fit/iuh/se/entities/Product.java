@@ -1,5 +1,6 @@
 package fit.iuh.se.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -26,7 +27,8 @@ public class Product {
 
     private Boolean isActive = true;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "category_id", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    @JsonIgnore
     private Category category;
 }

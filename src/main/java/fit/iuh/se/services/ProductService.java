@@ -22,4 +22,12 @@ public interface ProductService {
     ResponseEntity<?> getAll();
 
     ResponseEntity<?> getById(Long id);
+
+    ResponseEntity<?> updateProductWithImages(
+            Long id,
+            String name,
+            String description,
+            BigDecimal price,
+            Integer stock,
+            MultipartFile[] files);
 }

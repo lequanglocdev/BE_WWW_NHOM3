@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class CategoryServiceImpl implements CategoryService {
 
@@ -18,8 +20,26 @@ public class CategoryServiceImpl implements CategoryService {
         return ResponseEntity.ok(repo.findAll());
     }
 
+    private String normalize(String name) {
+        return name.trim()              // bỏ khoảng trắng đầu/cuối
+                .replaceAll("\\s+", "") // bỏ toàn bộ khoảng trắng giữa
+                .toLowerCase();      // chuyển thành chữ thường
+    }
+
     @Override
     public ResponseEntity<?> create(CategoryDTO dto) {
+
+        String normalizedNewName = normalize(dto.getName());
+
+        List<Category> categories = repo.findAll();
+
+        for (Category c : categories) {
+            if (normalize(c.getName()).equals(normalizedNewName)) {
+                throw new RuntimeException("Danh mục đã tồn tại");
+            }
+        }
+
+
         Category c = new Category();
         c.setName(dto.getName());
         c.setDescription(dto.getDescription());

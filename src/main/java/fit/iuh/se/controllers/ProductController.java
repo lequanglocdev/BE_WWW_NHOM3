@@ -41,10 +41,16 @@ public class ProductController {
         return service.createProductWithImages(name, description, price, stock, categoryId, files);
     }
 
-    @PutMapping("/admin/products/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id,
-                                    @RequestBody ProductDTO dto) {
-        return service.update(id, dto);
+    @PutMapping(value = "/admin/products/{id}", consumes = "multipart/form-data")
+    public ResponseEntity<?> updateProduct(
+            @PathVariable Long id,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String description,
+            @RequestParam(required = false) BigDecimal price,
+            @RequestParam(required = false) Integer stock,
+            @RequestParam(required = false) MultipartFile[] files
+    ) {
+        return service.updateProductWithImages(id, name, description, price, stock, files);
     }
 
     @DeleteMapping("/admin/products/{id}")

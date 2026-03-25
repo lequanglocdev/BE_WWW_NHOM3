@@ -14,9 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
+import java.util.Map;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -31,6 +31,10 @@ public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private CategoryRepository categoryRepo;
+
+    @Autowired
+    private Cloudinary cloudinary;
+
 
     @Override
     public ResponseEntity<?> createProductWithImages(
@@ -54,17 +58,17 @@ public class ProductServiceImpl implements ProductService {
 
             repo.save(product);
 
-            String uploadDir = "uploads/";
-
             for (MultipartFile file : files) {
-                String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
 
-                Path path = Paths.get(uploadDir + fileName);
-                Files.createDirectories(path.getParent());
-                Files.write(path, file.getBytes());
+                Map uploadResult = cloudinary.uploader().upload(
+                        file.getBytes(),
+                        ObjectUtils.emptyMap()
+                );
+
+                String imageUrl = uploadResult.get("secure_url").toString();
 
                 ProductImage img = new ProductImage();
-                img.setImageUrl(fileName);
+                img.setImageUrl(imageUrl);
                 img.setProduct(product);
 
                 imageRepo.save(img);
@@ -116,5 +120,51 @@ public class ProductServiceImpl implements ProductService {
                 repo.findById(id)
                         .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"))
         );
+    }
+
+    @Override
+    public ResponseEntity<?> updateProductWithImages(
+            Long id,
+            String name,
+            String description,
+            BigDecimal price,
+            Integer stock,
+            MultipartFile[] files) {
+
+        try {
+            Product p = repo.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
+
+            if (name != null) p.setName(name);
+            if (description != null) p.setDescription(description);
+            if (price != null && price.compareTo(BigDecimal.ZERO) > 0) p.setPrice(price);
+            if (stock != null && stock >= 0) p.setStock(stock);
+
+            repo.save(p);
+
+            // Nếu có upload ảnh mới
+            if (files != null && files.length > 0) {
+                for (MultipartFile file : files) {
+
+                    Map uploadResult = cloudinary.uploader().upload(
+                            file.getBytes(),
+                            ObjectUtils.asMap("folder", "ecommerce/products")
+                    );
+
+                    String imageUrl = uploadResult.get("secure_url").toString();
+
+                    ProductImage img = new ProductImage();
+                    img.setImageUrl(imageUrl);
+                    img.setProduct(p);
+
+                    imageRepo.save(img);
+                }
+            }
+
+            return ResponseEntity.ok(new ApiResponse(true, "Cập nhật sản phẩm + ảnh thành công"));
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Lỗi update: " + e.getMessage());
+        }
     }
 }

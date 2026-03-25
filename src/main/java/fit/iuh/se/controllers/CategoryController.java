@@ -1,6 +1,7 @@
 package fit.iuh.se.controllers;
 import fit.iuh.se.dtos.CategoryDTO;
 import fit.iuh.se.services.CategoryService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,13 +20,13 @@ public class CategoryController {
 
     // 👑 Admin
     @PostMapping("/admin/categories")
-    public ResponseEntity<?> create(@RequestBody CategoryDTO dto) {
+    public ResponseEntity<?> create(@Valid @RequestBody CategoryDTO dto) {
         return service.create(dto);
     }
 
     @PutMapping("/admin/categories/{id}")
     public ResponseEntity<?> update(@PathVariable Long id,
-                                    @RequestBody CategoryDTO dto) {
+                                    @Valid @RequestBody CategoryDTO dto) {
         return service.update(id, dto);
     }
 

@@ -28,23 +28,4 @@ public class OrderController {
                                     @PathVariable Long id) {
         return service.orderDetail(auth.getName(), id);
     }
-
-    @RestController
-    @RequestMapping("/admin/orders")
-    public class AdminOrderController {
-
-        @Autowired
-        private OrderService service;
-
-        @GetMapping
-        public ResponseEntity<?> allOrders() {
-            return service.getAllOrders();
-        }
-
-        @PutMapping("/{id}/status")
-        public ResponseEntity<?> updateStatus(@PathVariable Long id,
-                                              @RequestParam String status) {
-            return service.updateStatus(id, status);
-        }
-    }
 }

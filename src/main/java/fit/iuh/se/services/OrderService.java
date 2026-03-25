@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class OrderService {
@@ -69,7 +71,15 @@ public class OrderService {
         cart.getItems().clear();
         cartRepo.save(cart);
 
-        return ResponseEntity.ok("Đặt hàng thành công");
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", true);
+        response.put("message", "Đặt hàng thành công");
+        response.put("orderId", order.getId());
+        response.put("totalAmount", total);
+        response.put("totalItems", items.size());
+        response.put("createdAt", order.getCreatedAt());
+
+        return ResponseEntity.ok(response);
     }
     public ResponseEntity<?> myOrders(String email) {
         UserAccount user = userRepo.findByEmail(email)

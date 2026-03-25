@@ -47,7 +47,7 @@ public class SecurityConfig {
                         // ❌ chưa login
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setStatus(401);
-                            response.setContentType("application/json");
+                            response.setContentType("application/json; charset=UTF-8");
                             response.getWriter().write(
                                     "{\"status\":false,\"message\":\"Bạn chưa đăng nhập\"}"
                             );
@@ -55,7 +55,7 @@ public class SecurityConfig {
                         // ❌ không đủ quyền
                         .accessDeniedHandler((request, response, ex2) -> {
                             response.setStatus(403);
-                            response.setContentType("application/json");
+                            response.setContentType("application/json; charset=UTF-8");
                             response.getWriter().write(
                                     "{\"status\":false,\"message\":\"Bạn không có quyền\"}"
                             );

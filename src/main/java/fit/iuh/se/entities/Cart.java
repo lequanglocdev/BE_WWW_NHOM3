@@ -3,6 +3,7 @@ package fit.iuh.se.entities;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -17,5 +18,5 @@ public class Cart {
     private UserAccount user;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL)
-    private List<CartItem> items;
+    private List<CartItem> items = new ArrayList<>();
 }
