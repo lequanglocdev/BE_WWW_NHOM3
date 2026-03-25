@@ -23,8 +23,31 @@ public class AdminPromotionController {
         return service.getAll();
     }
 
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getOne(@PathVariable Long id){
+        return service.getById(id);
+    }
+
     @PutMapping("/{id}/disable")
     public ResponseEntity<?> disable(@PathVariable Long id){
         return service.disable(id);
     }
+
+    @PutMapping("/{id}/enable")
+    public ResponseEntity<?> enable(@PathVariable Long id){
+        return service.enable(id);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> update(@PathVariable Long id,
+                                    @RequestBody Promotion p){
+        return service.update(id, p);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable Long id){
+        return service.delete(id);
+    }
+
 }

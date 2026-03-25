@@ -62,7 +62,7 @@ public class PromotionService {
 
     public ResponseEntity<?> delete(Long id) {
         promoRepo.deleteById(id);
-        return ResponseEntity.ok("Đã xóa mã khuyến mãi");
+        return ResponseEntity.ok(new ApiResponse(true,"Đã xóa mã khuyến mãi"));
     }
 
     public ResponseEntity<?> disable(Long id) {
@@ -76,7 +76,7 @@ public class PromotionService {
         Promotion p = promoRepo.findById(id).orElseThrow();
         p.setIsActive(true);
         promoRepo.save(p);
-        return ResponseEntity.ok("Đã bật mã");
+        return ResponseEntity.ok( new ApiResponse(true,"Đã bật mã"));
     }
 
     // =============================
