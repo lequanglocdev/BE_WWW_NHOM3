@@ -66,14 +66,16 @@ public class PromotionService {
     }
 
     public ResponseEntity<?> disable(Long id) {
-        Promotion p = promoRepo.findById(id).orElseThrow();
+        Promotion p = promoRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy mã KM"));
         p.setIsActive(false);
         promoRepo.save(p);
-        return ResponseEntity.ok("Đã tắt mã");
+        return ResponseEntity.ok( new ApiResponse(true,"Đã tắt mã"));
     }
 
     public ResponseEntity<?> enable(Long id) {
-        Promotion p = promoRepo.findById(id).orElseThrow();
+        Promotion p = promoRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy mã KM"));
         p.setIsActive(true);
         promoRepo.save(p);
         return ResponseEntity.ok( new ApiResponse(true,"Đã bật mã"));
@@ -84,8 +86,10 @@ public class PromotionService {
     // =============================
 
     public ResponseEntity<?> applyPromotion(String email, String code) {
-        UserAccount user = userRepo.findByEmail(email).orElseThrow();
-        Cart cart = cartRepo.findByUser(user).orElseThrow();
+        UserAccount user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
+        Cart cart = cartRepo.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy giỏ hàng"));
 
         Promotion promo = promoRepo.findByCode(code)
                 .orElseThrow(() -> new RuntimeException("Mã không tồn tại"));
@@ -111,6 +115,10 @@ public class PromotionService {
 
         BigDecimal discount = calculateDiscount(total, promo);
         BigDecimal finalTotal = total.subtract(discount);
+
+        promo.setUsedCount(promo.getUsedCount() + 1);
+        promoRepo.save(promo);
+
 
         Map<String, Object> res = new HashMap<>();
         res.put("status", true);

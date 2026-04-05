@@ -34,10 +34,9 @@ public class ProductController {
             @RequestParam String description,
             @RequestParam BigDecimal price,
             @RequestParam int stock,
-
             @RequestParam Long categoryId,
             @RequestParam("files") MultipartFile[] files
-    ) {
+    ) throws Exception {  // ✅ thêm vào đây
         return service.createProductWithImages(name, description, price, stock, categoryId, files);
     }
 

@@ -1,5 +1,6 @@
 package fit.iuh.se.services;
 
+import fit.iuh.se.dtos.ApiResponse;
 import fit.iuh.se.entities.*;
 import fit.iuh.se.repositories.CartRepository;
 import fit.iuh.se.repositories.OrderRepository;
@@ -112,6 +113,6 @@ public class OrderService {
         order.setStatus(status.toUpperCase());
         orderRepo.save(order);
 
-        return ResponseEntity.ok("Cập nhật trạng thái thành công");
+        return ResponseEntity.ok(new ApiResponse(true, "Cập nhật trạng thái thành công"));
     }
 }

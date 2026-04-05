@@ -1,5 +1,6 @@
 package fit.iuh.se.services;
 
+import fit.iuh.se.dtos.ApiResponse;
 import fit.iuh.se.dtos.CategoryDTO;
 import fit.iuh.se.entities.Category;
 import fit.iuh.se.repositories.CategoryRepository;
@@ -44,7 +45,7 @@ public class CategoryServiceImpl implements CategoryService {
         c.setName(dto.getName());
         c.setDescription(dto.getDescription());
         repo.save(c);
-        return ResponseEntity.ok("Thêm danh mục thành công");
+        return ResponseEntity.ok(new ApiResponse(true, "Thêm danh mục thành công"));
     }
 
     @Override
@@ -56,7 +57,7 @@ public class CategoryServiceImpl implements CategoryService {
         if (dto.getDescription() != null) c.setDescription(dto.getDescription());
 
         repo.save(c);
-        return ResponseEntity.ok("Cập nhật danh mục thành công");
+        return ResponseEntity.ok(new ApiResponse(true, "Cập nhật danh mục thành công"));
     }
 
     @Override
@@ -66,6 +67,6 @@ public class CategoryServiceImpl implements CategoryService {
 
         c.setIsActive(false); // soft delete
         repo.save(c);
-        return ResponseEntity.ok("Đã xóa danh mục");
+        return ResponseEntity.ok(new ApiResponse(true, "Đã xóa danh mục"));
     }
 }

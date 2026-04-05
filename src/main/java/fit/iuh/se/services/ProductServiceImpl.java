@@ -43,42 +43,30 @@ public class ProductServiceImpl implements ProductService {
             BigDecimal price,
             int stock,
             Long categoryId,
-            MultipartFile[] files) {
+            MultipartFile[] files) throws  Exception {
+        Category category = categoryRepo.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Danh mục không tồn tại"));
 
-        try {
-            Category category = categoryRepo.findById(categoryId)
-                    .orElseThrow(() -> new RuntimeException("Danh mục không tồn tại"));
+        Product product = new Product();
+        product.setName(name);
+        product.setDescription(description);
+        product.setPrice(price);
+        product.setStock(stock);
+        product.setCategory(category);
+        repo.save(product);
 
-            Product product = new Product();
-            product.setName(name);
-            product.setDescription(description);
-            product.setPrice(price);
-            product.setStock(stock);
-            product.setCategory(category);
+        for (MultipartFile file : files) {
+            Map uploadResult = cloudinary.uploader().upload(
+                    file.getBytes(), ObjectUtils.emptyMap()
+            );
+            String imageUrl = uploadResult.get("secure_url").toString();
 
-            repo.save(product);
-
-            for (MultipartFile file : files) {
-
-                Map uploadResult = cloudinary.uploader().upload(
-                        file.getBytes(),
-                        ObjectUtils.emptyMap()
-                );
-
-                String imageUrl = uploadResult.get("secure_url").toString();
-
-                ProductImage img = new ProductImage();
-                img.setImageUrl(imageUrl);
-                img.setProduct(product);
-
-                imageRepo.save(img);
-            }
-
-            return ResponseEntity.ok("Tạo sản phẩm kèm ảnh thành công");
-
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Lỗi tạo sản phẩm: " + e.getMessage());
+            ProductImage img = new ProductImage();
+            img.setImageUrl(imageUrl);
+            img.setProduct(product);
+            imageRepo.save(img);
         }
+        return ResponseEntity.ok(new ApiResponse(true, "Tạo sản phẩm kèm ảnh thành công"));
     }
 
     @Override
@@ -111,7 +99,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ResponseEntity<?> getAll() {
-        return ResponseEntity.ok(repo.findAll());
+//        return ResponseEntity.ok(repo.findAll());
+        return ResponseEntity.ok(repo.findByIsActiveTrue()); // ✅
     }
 
     @Override

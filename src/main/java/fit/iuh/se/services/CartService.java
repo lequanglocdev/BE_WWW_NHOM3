@@ -1,6 +1,7 @@
 package fit.iuh.se.services;
 
 import fit.iuh.se.dtos.AddToCartDTO;
+import fit.iuh.se.dtos.ApiResponse;
 import fit.iuh.se.dtos.UpdateCartItemDTO;
 import fit.iuh.se.entities.*;
 import fit.iuh.se.repositories.*;
@@ -30,21 +31,25 @@ public class CartService {
     }
 
     public ResponseEntity<?> getCart(String email) {
-        UserAccount user = userRepo.findByEmail(email).orElseThrow();
+        UserAccount user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
         Cart cart = getOrCreateCart(user);
         return ResponseEntity.ok(cart);
     }
 
     public ResponseEntity<?> addToCart(String email, AddToCartDTO dto) {
-        UserAccount user = userRepo.findByEmail(email).orElseThrow();
+        UserAccount user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
+        ;
         Cart cart = getOrCreateCart(user);
-        Product product = productRepo.findById(dto.getProductId()).orElseThrow();
+        Product product = productRepo.findById(dto.getProductId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));;
 
         for (CartItem item : cart.getItems()) {
             if (item.getProduct().getId().equals(product.getId())) {
                 item.setQuantity(item.getQuantity() + dto.getQuantity());
                 itemRepo.save(item);
-                return ResponseEntity.ok("Đã tăng số lượng sản phẩm trong giỏ");
+                return ResponseEntity.ok(new ApiResponse(true, "Đã tăng số lượng sản phẩm trong giỏ"));
             }
         }
 
@@ -54,20 +59,21 @@ public class CartService {
         newItem.setQuantity(dto.getQuantity());
         itemRepo.save(newItem);
 
-        return ResponseEntity.ok("Đã thêm sản phẩm vào giỏ");
+        return ResponseEntity.ok(new ApiResponse(true, "Đã thêm sản phẩm vào giỏ"));
     }
 
     public ResponseEntity<?> removeItem(Long itemId) {
         itemRepo.deleteById(itemId);
-        return ResponseEntity.ok("Đã xoá sản phẩm khỏi giỏ");
+        return ResponseEntity.ok(new ApiResponse(true, "Đã xoá sản phẩm khỏi giỏ"));
     }
 
     public ResponseEntity<?> clearCart(String email) {
-        UserAccount user = userRepo.findByEmail(email).orElseThrow();
+        UserAccount user =userRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));;
         Cart cart = getOrCreateCart(user);
         cart.getItems().clear();
         cartRepo.save(cart);
-        return ResponseEntity.ok("Đã xoá toàn bộ giỏ hàng");
+        return ResponseEntity.ok(new ApiResponse(true, "Đã xoá toàn bộ giỏ hàng"));
     }
 
     public ResponseEntity<?> updateQuantity(String email, UpdateCartItemDTO dto) {
@@ -85,13 +91,18 @@ public class CartService {
         item.setQuantity(dto.getQuantity());
         itemRepo.save(item);
 
-        return ResponseEntity.ok("Cập nhật số lượng thành công");
+        return ResponseEntity.ok(new ApiResponse(true, "Cập nhật số lượng thành công"));
     }
     public ResponseEntity<?> applyPromo(String email, String code){
 
         UserAccount user = userRepo.findByEmail(email).orElseThrow();
-        Cart cart = cartRepo.findByUser(user).orElseThrow();
-        Promotion promo = promoRepo.findByCode(code).orElseThrow();
+        Cart cart =cartRepo.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy giỏ hàng"));;
+
+        if (cart.getItems().isEmpty())                              // ✅ thêm vào đây
+            throw new RuntimeException("Giỏ hàng đang trống");
+        Promotion promo = promoRepo.findByCode(code)
+                .orElseThrow(() -> new RuntimeException("Mã không tồn tại"));
 
         if(!promo.getIsActive())
             throw new RuntimeException("Mã đã bị khóa");
@@ -120,7 +131,7 @@ public class CartService {
 
         cartRepo.save(cart);
 
-        return ResponseEntity.ok("Áp mã thành công. Giảm: " + discount);
+        return ResponseEntity.ok(new ApiResponse(true, "Áp mã thành công. Giảm: " + discount));
     }
 
 }

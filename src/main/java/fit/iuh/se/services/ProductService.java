@@ -14,7 +14,7 @@ public interface ProductService {
             BigDecimal price,
             int stock,
             Long categoryId,
-            MultipartFile[] files);
+            MultipartFile[] files) throws Exception;
     ResponseEntity<?> update(Long id, ProductDTO dto);
 
     ResponseEntity<?> delete(Long id);
