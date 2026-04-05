@@ -9,6 +9,9 @@ import fit.iuh.se.repositories.CategoryRepository;
 import fit.iuh.se.repositories.ProductImageRepository;
 import fit.iuh.se.repositories.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,6 +19,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.math.BigDecimal;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+
+import java.util.HashMap;
 import java.util.Map;
 
 @Service
@@ -155,5 +160,32 @@ public class ProductServiceImpl implements ProductService {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Lỗi update: " + e.getMessage());
         }
+    }
+    @Override
+    public ResponseEntity<?> search(
+            String keyword,
+            Long categoryId,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            int page,
+            int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Product> result = repo.search(
+                keyword,
+                categoryId,
+                minPrice,
+                maxPrice,
+                pageable
+        );
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("products", result.getContent());   // danh sách sản phẩm
+        response.put("currentPage", result.getNumber()); // trang hiện tại
+        response.put("totalPages", result.getTotalPages()); // tổng số trang
+        response.put("totalItems", result.getTotalElements()); // tổng số sản phẩm
+
+        return ResponseEntity.ok(response);
     }
 }

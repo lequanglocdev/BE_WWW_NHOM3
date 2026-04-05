@@ -30,4 +30,12 @@ public interface ProductService {
             BigDecimal price,
             Integer stock,
             MultipartFile[] files);
+    ResponseEntity<?> search(
+            String keyword,
+            Long categoryId,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            int page,
+            int size
+    );
 }

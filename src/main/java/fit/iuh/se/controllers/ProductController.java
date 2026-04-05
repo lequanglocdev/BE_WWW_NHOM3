@@ -26,6 +26,18 @@ public class ProductController {
         return service.getById(id);
     }
 
+    @GetMapping("/products/search")
+    public ResponseEntity<?> search(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return service.search(keyword, categoryId, minPrice, maxPrice, page, size);
+    }
+
     // 👑 ADMIN APIs
 
     @PostMapping("/admin/products")
@@ -56,4 +68,5 @@ public class ProductController {
     public ResponseEntity<?> delete(@PathVariable Long id) {
         return service.delete(id);
     }
+
 }
