@@ -10,4 +10,6 @@ public interface  AuthService {
     ResponseEntity<?>  verifyEmail(String token);
     ResponseEntity<?> forgotPassword(String email);
     ResponseEntity<?> resetPassword(String token, String newPass);
+    ResponseEntity<?> refresh(String refreshToken);
+    ResponseEntity<?> logout(String email);
 }

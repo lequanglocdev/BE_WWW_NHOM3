@@ -7,6 +7,7 @@ import fit.iuh.se.services.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -45,6 +46,16 @@ public class AuthController {
                 body.getToken(),
                 body.getPassword()
         );
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refresh(@RequestBody Map<String, String> body) {
+        return auth.refresh(body.get("refreshToken"));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(Authentication authentication) {
+        return auth.logout(authentication.getName());
     }
 
 

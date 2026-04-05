@@ -4,6 +4,7 @@ import fit.iuh.se.dtos.ApiResponse;
 import fit.iuh.se.dtos.LoginRequestDTO;
 import fit.iuh.se.dtos.RegisterRequest;
 import fit.iuh.se.entities.PasswordResetToken;
+import fit.iuh.se.entities.RefreshToken;
 import fit.iuh.se.entities.UserAccount;
 import fit.iuh.se.entities.VerificationToken;
 import fit.iuh.se.repositories.PasswordResetTokenRepository;
@@ -16,6 +17,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -27,6 +30,8 @@ public class AuthServiceImpl implements AuthService {
     @Autowired private PasswordEncoder encoder;
     @Autowired private JwtUtils jwt;
     @Autowired private EmailService emailService;
+    @Autowired
+    private RefreshTokenService refreshTokenService;
 
     // REGISTER
     public ResponseEntity<ApiResponse> register(RegisterRequest req) {
@@ -74,7 +79,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     // LOGIN
-    public ResponseEntity<ApiResponse> login(LoginRequestDTO req) {
+    public ResponseEntity<?> login(LoginRequestDTO req) {
         UserAccount u = userRepo.findByEmail(req.getEmail())
                 .orElseThrow(() -> new RuntimeException("Email không tồn tại"));
 
@@ -92,7 +97,15 @@ public class AuthServiceImpl implements AuthService {
         String token = jwt.generateToken(u.getEmail(), u.getIsAdmin());
         String role = u.getIsAdmin() ? "ADMIN" : "USER";
 
-        return ResponseEntity.ok(new ApiResponse(true, "Đăng nhập thành công", token,role));
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(u);
+        Map<String, Object> res = new HashMap<>();
+        res.put("status", true);
+        res.put("message", "Đăng nhập thành công");
+        res.put("accessToken", token);
+        res.put("refreshToken", refreshToken.getToken()); // ✅ client cần cái này
+        res.put("role", role);
+
+        return ResponseEntity.ok(res);
     }
 
     // FORGOT PASSWORD
@@ -131,4 +144,24 @@ public class AuthServiceImpl implements AuthService {
         return ResponseEntity.ok(new ApiResponse(true, "Đổi mật khẩu thành công"));
     }
 
+    public ResponseEntity<?> refresh(String refreshToken) {
+        RefreshToken rt = refreshTokenService.verifyRefreshToken(refreshToken);
+        UserAccount user = rt.getUser();
+
+        String newAccessToken = jwt.generateToken(user.getEmail(), user.getIsAdmin());
+
+        Map<String, Object> res = new HashMap<>();
+        res.put("status", true);
+        res.put("accessToken", newAccessToken);
+
+        return ResponseEntity.ok(res);
+    }
+    public ResponseEntity<?> logout(String email) {
+        UserAccount user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
+
+        refreshTokenService.revokeToken(user);
+
+        return ResponseEntity.ok(new ApiResponse(true, "Đăng xuất thành công"));
+    }
 }
