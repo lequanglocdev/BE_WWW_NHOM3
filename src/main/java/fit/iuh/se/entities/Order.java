@@ -1,5 +1,6 @@
 package fit.iuh.se.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -17,6 +18,7 @@ public class Order {
     private Long id;
 
     @ManyToOne
+    @JsonIgnore
     private UserAccount user;
 
     private String receiverName;

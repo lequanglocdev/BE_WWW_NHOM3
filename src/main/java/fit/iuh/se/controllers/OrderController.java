@@ -28,4 +28,9 @@ public class OrderController {
                                     @PathVariable Long id) {
         return service.orderDetail(auth.getName(), id);
     }
+    @DeleteMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelOrder(Authentication auth,
+                                         @PathVariable Long id) {
+        return service.cancelOrder(auth.getName(), id);
+    }
 }

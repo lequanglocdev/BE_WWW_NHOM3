@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class CartService {
@@ -34,7 +36,15 @@ public class CartService {
         UserAccount user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
         Cart cart = getOrCreateCart(user);
-        return ResponseEntity.ok(cart);
+
+        Map<String, Object> res = new HashMap<>();
+        res.put("cartId", cart.getId());
+        res.put("items", cart.getItems());
+        res.put("discountAmount", cart.getDiscountAmount());
+        res.put("finalAmount", cart.getFinalAmount());
+        res.put("promotionCode", cart.getPromotion() != null ? cart.getPromotion().getCode() : null);
+
+        return ResponseEntity.ok(res);
     }
 
     public ResponseEntity<?> addToCart(String email, AddToCartDTO dto) {
@@ -68,11 +78,19 @@ public class CartService {
     }
 
     public ResponseEntity<?> clearCart(String email) {
-        UserAccount user =userRepo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));;
+        UserAccount user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
         Cart cart = getOrCreateCart(user);
+
+        itemRepo.deleteAll(cart.getItems());
         cart.getItems().clear();
+
+        cart.setPromotion(null);        // ✅ reset mã KM
+        cart.setDiscountAmount(0.0);    // ✅ reset tiền giảm
+        cart.setFinalAmount(0.0);       // ✅ reset tổng tiền
+
         cartRepo.save(cart);
+
         return ResponseEntity.ok(new ApiResponse(true, "Đã xoá toàn bộ giỏ hàng"));
     }
 

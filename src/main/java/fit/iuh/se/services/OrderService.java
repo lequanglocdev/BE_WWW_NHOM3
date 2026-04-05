@@ -67,9 +67,19 @@ public class OrderService {
 
         order.setItems(items);
         order.setTotalAmount(total);
+        order.setDiscountAmount(cart.getDiscountAmount() != null ? cart.getDiscountAmount() : 0.0);
+        order.setFinalAmount(cart.getFinalAmount() != null && cart.getFinalAmount() > 0
+                ? cart.getFinalAmount()
+                : total.doubleValue());
+        order.setPromoCode(cart.getPromotion() != null ? cart.getPromotion().getCode() : null);
+
+
         orderRepo.save(order);
 
         cart.getItems().clear();
+        cart.setPromotion(null);
+        cart.setDiscountAmount(0.0);
+        cart.setFinalAmount(0.0);
         cartRepo.save(cart);
 
         Map<String, Object> response = new HashMap<>();
@@ -77,6 +87,8 @@ public class OrderService {
         response.put("message", "Đặt hàng thành công");
         response.put("orderId", order.getId());
         response.put("totalAmount", total);
+        response.put("discountAmount", order.getDiscountAmount()); // ✅ thêm
+        response.put("finalAmount", order.getFinalAmount());       // ✅ thêm
         response.put("totalItems", items.size());
         response.put("createdAt", order.getCreatedAt());
 
@@ -114,5 +126,30 @@ public class OrderService {
         orderRepo.save(order);
 
         return ResponseEntity.ok(new ApiResponse(true, "Cập nhật trạng thái thành công"));
+    }
+    public ResponseEntity<?> cancelOrder(String email, Long orderId) {
+        UserAccount user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
+
+        Order order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng"));
+
+        if (!order.getUser().getId().equals(user.getId()))
+            throw new RuntimeException("Bạn không có quyền hủy đơn này");
+
+        if (!order.getStatus().equals("PENDING"))
+            throw new RuntimeException("Chỉ có thể hủy đơn khi đang chờ xác nhận");
+
+        // Hoàn lại stock
+        for (OrderItem item : order.getItems()) {
+            Product p = item.getProduct();
+            p.setStock(p.getStock() + item.getQuantity());
+            productRepo.save(p);
+        }
+
+        order.setStatus("CANCELLED");
+        orderRepo.save(order);
+
+        return ResponseEntity.ok(new ApiResponse(true, "Hủy đơn hàng thành công"));
     }
 }
