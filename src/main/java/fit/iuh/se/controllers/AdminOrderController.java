@@ -10,16 +10,20 @@ import org.springframework.web.bind.annotation.*;
 public class AdminOrderController {
 
     @Autowired
-    private OrderService service;
+    private OrderService orderService;
 
     @GetMapping
     public ResponseEntity<?> allOrders() {
-        return service.getAllOrders();
+        return orderService.getAllOrders();
     }
 
+    /**
+     * Cập nhật trạng thái đơn hàng.
+     * Giá trị hợp lệ cho status: PENDING, UNPAID, PAID, CANCELLED
+     */
     @PutMapping("/{id}/status")
     public ResponseEntity<?> updateStatus(@PathVariable Long id,
                                           @RequestParam String status) {
-        return service.updateStatus(id, status);
+        return orderService.updateStatus(id, status);
     }
 }

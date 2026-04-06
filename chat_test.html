@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Chat Realtime Test - Nhom 3</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .box {
+            width: 400px;
+            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        #messages {
+            height: 300px;
+            border: 1px solid #eee;
+            overflow-y: scroll;
+            margin-bottom: 10px;
+            padding: 5px;
+            background: #f9f9f9;
+        }
+
+        .msg {
+            margin-bottom: 8px;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        .me {
+            background: #dcf8c6;
+            text-align: right;
+        }
+
+        .them {
+            background: #fff;
+            border: 1px solid #ddd;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+            border: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="box">
+        <h2>💬 Chat Realtime</h2>
+        <div id="login-section">
+            <input type="text" id="email" placeholder="Email (user@gmail.com)" value="test@gmail.com">
+            <input type="password" id="password" placeholder="Mật khẩu" value="123">
+            <button onclick="login()">1. Đăng nhập lấy Token</button>
+        </div>
+
+        <div id="chat-section" style="display:none; margin-top: 20px;">
+            <p>Đang đăng nhập: <strong id="current-user"></strong></p>
+            <input type="number" id="receiverId" placeholder="ID người nhận (Ví dụ: 1 là Admin)">
+            <div id="messages"></div>
+            <input type="text" id="content" placeholder="Nhập tin nhắn...">
+            <button onclick="sendMessage()" style="background: #28a745;">Gửi tin nhắn</button>
+        </div>
+    </div>
+
+    <script>
+        let stompClient = null;
+        let token = null;
+        let myId = null;
+
+        async function login() {
+            const res = await fetch('http://localhost:8081/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: document.getElementById('email').value, password: document.getElementById('password').value })
+            });
+            const data = await res.json();
+            if (data.status) {
+                token = data.accessToken;
+                // Giả sử backend trả về ID người dùng trong role hoặc claim, ở đây ta lấy demo
+                document.getElementById('current-user').innerText = document.getElementById('email').value;
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('chat-section').style.display = 'block';
+                connectWebSocket();
+            } else { alert("Login sai!"); }
+        }
+
+        function connectWebSocket() {
+            const socket = new SockJS('http://localhost:8081/api/ws');
+            stompClient = Stomp.over(socket);
+
+            // Gửi token trong headers khi kết nối (Quan trọng cho Interceptor)
+            const headers = { 'Authorization': 'Bearer ' + token };
+
+            stompClient.connect(headers, function (frame) {
+                console.log('Connected: ' + frame);
+
+                // Đăng ký nhận tin nhắn cá nhân
+                // Đường dẫn này khớp với registry.setUserDestinationPrefix("/user") trong config
+                stompClient.subscribe('/user/queue/messages', function (message) {
+                    showMessage(JSON.parse(message.body), 'them');
+                });
+            }, function (error) {
+                console.log('STOMP error: ' + error);
+            });
+        }
+
+        function sendMessage() {
+            const receiverId = document.getElementById('receiverId').value;
+            const content = document.getElementById('content').value;
+
+            const chatMessage = {
+                receiverId: parseInt(receiverId),
+                content: content
+            };
+
+            // Gửi đến @MessageMapping("/chat.send")
+            stompClient.send("/app/chat.send", {}, JSON.stringify(chatMessage));
+
+            showMessage({ content: content }, 'me');
+            document.getElementById('content').value = '';
+        }
+
+        function showMessage(msg, type) {
+            const div = document.createElement('div');
+            div.className = 'msg ' + type;
+            div.innerText = msg.content;
+            document.getElementById('messages').appendChild(div);
+            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+        }
+    </script>
+</body>
+
+</html>

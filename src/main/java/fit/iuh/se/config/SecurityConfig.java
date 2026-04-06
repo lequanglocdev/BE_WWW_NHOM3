@@ -26,6 +26,7 @@ public class SecurityConfig {
     SecurityFilterChain filter(HttpSecurity http) throws Exception {
         http
                 .csrf(cs -> cs.disable())
+                .cors(org.springframework.security.config.Customizer.withDefaults())
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
@@ -35,6 +36,10 @@ public class SecurityConfig {
                         .requestMatchers("/products/**").permitAll()
                         .requestMatchers("/images/**").permitAll()   // ⭐ cho xem ảnh
                         .requestMatchers("/categories/**").permitAll()
+                        .requestMatchers("/payment/**").permitAll()  // VNPay callback không cần login
+
+                        // ✅ WebSocket endpoint: SockJS cần nhiều sub-path
+                        .requestMatchers("/ws/**").permitAll()
 
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/admin/products/**").hasRole("ADMIN")

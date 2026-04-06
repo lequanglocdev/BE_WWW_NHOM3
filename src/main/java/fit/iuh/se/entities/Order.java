@@ -21,18 +21,29 @@ public class Order {
     @JsonIgnore
     private UserAccount user;
 
-    private String receiverName;
+    // --- Thông tin người nhận ---
+    private String customerName;
     private String phone;
-    private String address;
+    private String shippingAddress;
 
-    private LocalDateTime createdAt;
-    private String status;
-    private BigDecimal totalAmount;
+    // --- Thời gian & Trạng thái ---
+    private LocalDateTime orderDate;
 
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
+
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod;
+
+    // --- Tiền (tất cả BigDecimal) ---
+    private BigDecimal totalAmount;      // Tổng tiền gốc
+    private BigDecimal discountAmount;   // Số tiền được giảm
+    private BigDecimal finalAmount;      // Tổng tiền sau giảm
+
+    // --- Mã giảm giá ---
+    private String promoCode;
+
+    // --- Danh sách sản phẩm ---
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderItem> items;
-
-    private Double discountAmount;
-    private Double finalAmount;
-    private String promoCode;
 }

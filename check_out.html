@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Test Thanh toán - Nhom 3 BE</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 50px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 500px;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        button {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .info {
+            background: #f4f4f4;
+            padding: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Giả lập Thanh toán</h2>
+        <div class="info">
+            <strong>Lưu ý:</strong> Bạn cần Login để lấy Token trước khi bấm Thanh toán. <br>
+            <em>User: user@gmail.com / Pass: 123456</em>
+        </div>
+
+        <button onclick="login()" style="background: #007bff; margin-bottom: 20px;">1. Bấm để Login (Lấy Token)</button>
+
+        <hr>
+
+        <input type="text" id="name" placeholder="Họ tên người nhận" value="Nguyen Van A">
+        <input type="text" id="phone" placeholder="Số điện thoại" value="0901234567">
+        <input type="text" id="address" placeholder="Địa chỉ giao hàng" value="123 Nguyen Hue, Quận 1">
+
+        <label>Phương thức thanh toán:</label>
+        <select id="method">
+            <option value="COD">Thanh toán khi nhận hàng (COD)</option>
+            <option value="VNPAY">Thanh toán qua VNPay (QR Code)</option>
+        </select>
+
+        <button onclick="checkout()">2. Xác nhận Thanh toán</button>
+
+        <p id="message"></p>
+    </div>
+
+    <script>
+        let jwtToken = "";
+
+        // Hàm Login để lấy Token (Giả sử endpoint login của bạn Lộc là /auth/login)
+        async function login() {
+            const res = await fetch('http://localhost:8081/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: 'test@gmail.com', password: '123' }) // Dùng pass 123 bạn vừa tạo
+            });
+            const data = await res.json();
+
+            // Sửa chỗ này: Backend của bạn trả về 'accessToken' và 'status'
+            if (res.ok && data.status === true) {
+                jwtToken = data.accessToken; // Lấy đúng trường accessToken
+                alert("Ngon! Đã lấy Token thành công.");
+                console.log("Token của bạn:", jwtToken);
+            } else {
+                alert("Thất bại thật sự: " + (data.message || "Lỗi login"));
+            }
+        }
+
+        async function checkout() {
+            if (!jwtToken) return alert("Vui lòng bấm Login trước!");
+
+            const body = {
+                customerName: document.getElementById('name').value,
+                phone: document.getElementById('phone').value,
+                shippingAddress: document.getElementById('address').value,
+                paymentMethod: document.getElementById('method').value
+            };
+
+            const res = await fetch('http://localhost:8081/api/user/checkout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + jwtToken
+                },
+                body: JSON.stringify(body)
+            });
+
+            const result = await res.json();
+
+            if (result.paymentUrl) {
+                document.getElementById('message').innerText = "Đang chuyển hướng sang VNPay...";
+                window.location.href = result.paymentUrl; // Chuyển hướng sang trang VNPay
+            } else {
+                document.getElementById('message').innerHTML = `✅ Thành công! Mã đơn: #${result.orderId}`;
+            }
+        }
+    </script>
+</body>
+
+</html>
